@@ -30,3 +30,15 @@
 *.exe
 *.out
 *.app
+
+# Build directories
+build/
+
+# Python caches and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+.venv-*/
+
+# Download caches
+.wheelhouse-linux/
