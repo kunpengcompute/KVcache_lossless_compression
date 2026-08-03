@@ -381,13 +381,11 @@ HUF_decompress8X1_usingDTable_interleaved_stream(
     {   
         const HUF_DEltX1* dtable = (const HUF_DEltX1*)(DTable + 1);
         U32 const table_sft = (64 - HUF_getDTableDesc(DTable).tableLog) & 0x3F;
-
-        const size_t segmentSize    = ((dstSize +7) >> 3);
-        const size_t groupCount     = segmentSize / 5;
-        const size_t groupRemainder = segmentSize - groupCount * 5;
-
+        const size_t fullRounds     = dstSize >> 3;
+        const size_t tailSize       = dstSize & 7;
+        const size_t groupCount     = fullRounds / 5;
+        const size_t groupRemainder = fullRounds - groupCount * 5;
         uint8_t* op = (uint8_t*) dst;
-
         const uint8_t *ip1 = ((uint8_t*)cHufSrc) + 14 + ((const uint16_t*)cHufSrc)[0] - 8;
         const uint8_t *ip2 = ip1                      + ((const uint16_t*)cHufSrc)[1];
         const uint8_t *ip3 = ip2                      + ((const uint16_t*)cHufSrc)[2];
@@ -396,18 +394,14 @@ HUF_decompress8X1_usingDTable_interleaved_stream(
         const uint8_t *ip6 = ip5                      + ((const uint16_t*)cHufSrc)[5];
         const uint8_t *ip7 = ip6                      + ((const uint16_t*)cHufSrc)[6];
         const uint8_t *ip8 = ((uint8_t*)cHufSrc)      + cHufSrcSize - 8;
-
         const uint8_t* ip[] = {ip1, ip2, ip3, ip4, ip5, ip6, ip7, ip8};
         uint64_t       d[8];
-
         for (int k=0; k<8; k++) {
             d[k]   = (1|(*(U64*)ip[k]));
             d[k] <<= (8 - highbit_u9(ip[k][7]));
         }
-
         #define HUF4X1_RELD(k)   { int8_t c=trailbit_u64(d[k]);  ip[k]-=(c>>3);  d[k]=(1|(*(U64*)ip[k]));  d[k]<<=(c&7); }
         #define HUF4X1_DECK(k)   { HUF_DEltX1 item= dtable[(d[k]>>table_sft)];  d[k]<<=item.nbBits;    *op++ = item.byte;}
-
         /* up to 16 symbols per loop (4 symbols per stream) in 64-bit mode */
         for (size_t i = 0; i < groupCount; ++i) {
             HUF4X1_DECK(0);      // 0 1 2 3 4 5 6 7
@@ -418,7 +412,6 @@ HUF_decompress8X1_usingDTable_interleaved_stream(
             HUF4X1_DECK(5);
             HUF4X1_DECK(6);
             HUF4X1_DECK(7);
-
             HUF4X1_DECK(0);
             HUF4X1_DECK(1);
             HUF4X1_DECK(2);
@@ -427,7 +420,6 @@ HUF_decompress8X1_usingDTable_interleaved_stream(
             HUF4X1_DECK(5);
             HUF4X1_DECK(6);
             HUF4X1_DECK(7);
-
             HUF4X1_DECK(0);
             HUF4X1_DECK(1);
             HUF4X1_DECK(2);
@@ -436,7 +428,6 @@ HUF_decompress8X1_usingDTable_interleaved_stream(
             HUF4X1_DECK(5);
             HUF4X1_DECK(6);
             HUF4X1_DECK(7);
-
             HUF4X1_DECK(0);
             HUF4X1_DECK(1);
             HUF4X1_DECK(2);
@@ -445,7 +436,6 @@ HUF_decompress8X1_usingDTable_interleaved_stream(
             HUF4X1_DECK(5);
             HUF4X1_DECK(6);
             HUF4X1_DECK(7);
-
             HUF4X1_DECK(0);
             HUF4X1_DECK(1);
             HUF4X1_DECK(2);
@@ -454,7 +444,6 @@ HUF_decompress8X1_usingDTable_interleaved_stream(
             HUF4X1_DECK(5);
             HUF4X1_DECK(6);
             HUF4X1_DECK(7);
-
             HUF4X1_RELD(0);
             HUF4X1_RELD(1);
             HUF4X1_RELD(2);
@@ -464,7 +453,6 @@ HUF_decompress8X1_usingDTable_interleaved_stream(
             HUF4X1_RELD(6);
             HUF4X1_RELD(7);
         }
-
         for (size_t i = 0; i < groupRemainder; ++i) {
             HUF4X1_DECK(0);
             HUF4X1_DECK(1);
@@ -475,15 +463,15 @@ HUF_decompress8X1_usingDTable_interleaved_stream(
             HUF4X1_DECK(6);
             HUF4X1_DECK(7);
         }
-        
+        /* The first dstSize % 8 streams contain one additional symbol. */
+        for (size_t k = 0; k < tailSize; ++k) {
+            HUF4X1_DECK(k);
+        }
         #undef HUF4X1_RELD
         #undef HUF4X1_DECK
-
         return dstSize;
     }
 }
-
-
 FORCE_INLINE_TEMPLATE size_t
 HUF_decompress8X1_usingDTable_interleaved_stream_stride_2byte (
           void* dst,  size_t dstCount,
@@ -492,16 +480,14 @@ HUF_decompress8X1_usingDTable_interleaved_stream_stride_2byte (
 {
     /* Check */
     if (cHufSrcSize < 10) return ERROR(corruption_detected);  /* strict minimum : jump table + 1 byte per stream */
-    {   
+    {
         const HUF_DEltX1* dtable = (const HUF_DEltX1*)(DTable + 1);
         U32 const table_sft = (64 - HUF_getDTableDesc(DTable).tableLog) & 0x3F;
-
-        const size_t segmentSize    = ((dstCount+7) >> 3);
-        const size_t groupCount     = segmentSize / 5;
-        const size_t groupRemainder = segmentSize - groupCount * 5;
-
+        const size_t fullRounds     = dstCount >> 3;
+        const size_t tailSize       = dstCount & 7;
+        const size_t groupCount     = fullRounds / 5;
+        const size_t groupRemainder = fullRounds - groupCount * 5;
         uint16_t* op = (uint16_t*)dst;
-
         const uint8_t *ip1 = ((uint8_t*)cHufSrc) + 14 + ((const uint16_t*)cHufSrc)[0] - 8;
         const uint8_t *ip2 = ip1                      + ((const uint16_t*)cHufSrc)[1];
         const uint8_t *ip3 = ip2                      + ((const uint16_t*)cHufSrc)[2];
@@ -510,18 +496,14 @@ HUF_decompress8X1_usingDTable_interleaved_stream_stride_2byte (
         const uint8_t *ip6 = ip5                      + ((const uint16_t*)cHufSrc)[5];
         const uint8_t *ip7 = ip6                      + ((const uint16_t*)cHufSrc)[6];
         const uint8_t *ip8 = ((uint8_t*)cHufSrc)      + cHufSrcSize - 8;
-
         const uint8_t* ip[] = {ip1, ip2, ip3, ip4, ip5, ip6, ip7, ip8};
         uint64_t       d[8];
-
         for (int k=0; k<8; k++) {
             d[k]   = (1|(*(U64*)ip[k]));
             d[k] <<= (8 - highbit_u9(ip[k][7]));
         }
-
         #define HUF4X1_RELD(k)   { int8_t c=trailbit_u64(d[k]);  ip[k]-=(c>>3);  d[k]=(1|(*(U64*)ip[k]));  d[k]<<=(c&7); }
         #define HUF4X1_DECK(k)   { HUF_DEltX1 item= dtable[(d[k]>>table_sft)];  d[k]<<=item.nbBits;    *op++=(uint16_t)item.byte; }
-
         /* up to 16 symbols per loop (4 symbols per stream) in 64-bit mode */
         for (size_t i = 0; i < groupCount; ++i) {
             HUF4X1_DECK(0);      // 0 1 2 3 4 5 6 7
@@ -532,7 +514,6 @@ HUF_decompress8X1_usingDTable_interleaved_stream_stride_2byte (
             HUF4X1_DECK(5);
             HUF4X1_DECK(6);
             HUF4X1_DECK(7);
-
             HUF4X1_DECK(0);
             HUF4X1_DECK(1);
             HUF4X1_DECK(2);
@@ -541,7 +522,6 @@ HUF_decompress8X1_usingDTable_interleaved_stream_stride_2byte (
             HUF4X1_DECK(5);
             HUF4X1_DECK(6);
             HUF4X1_DECK(7);
-
             HUF4X1_DECK(0);
             HUF4X1_DECK(1);
             HUF4X1_DECK(2);
@@ -550,7 +530,6 @@ HUF_decompress8X1_usingDTable_interleaved_stream_stride_2byte (
             HUF4X1_DECK(5);
             HUF4X1_DECK(6);
             HUF4X1_DECK(7);
-
             HUF4X1_DECK(0);
             HUF4X1_DECK(1);
             HUF4X1_DECK(2);
@@ -559,7 +538,6 @@ HUF_decompress8X1_usingDTable_interleaved_stream_stride_2byte (
             HUF4X1_DECK(5);
             HUF4X1_DECK(6);
             HUF4X1_DECK(7);
-
             HUF4X1_DECK(0);
             HUF4X1_DECK(1);
             HUF4X1_DECK(2);
@@ -568,7 +546,6 @@ HUF_decompress8X1_usingDTable_interleaved_stream_stride_2byte (
             HUF4X1_DECK(5);
             HUF4X1_DECK(6);
             HUF4X1_DECK(7);
-
             HUF4X1_RELD(0);
             HUF4X1_RELD(1);
             HUF4X1_RELD(2);
@@ -578,7 +555,6 @@ HUF_decompress8X1_usingDTable_interleaved_stream_stride_2byte (
             HUF4X1_RELD(6);
             HUF4X1_RELD(7);
         }
-
         for (size_t i = 0; i < groupRemainder; ++i) {
             HUF4X1_DECK(0);
             HUF4X1_DECK(1);
@@ -589,10 +565,12 @@ HUF_decompress8X1_usingDTable_interleaved_stream_stride_2byte (
             HUF4X1_DECK(6);
             HUF4X1_DECK(7);
         }
-
+        /* The first dstCount % 8 streams contain one additional symbol. */
+        for (size_t k = 0; k < tailSize; ++k) {
+            HUF4X1_DECK(k);
+        }
         #undef HUF4X1_RELD
         #undef HUF4X1_DECK
-
         return dstCount;    // 这里返回的是uint16_t的数量
     }
 }
