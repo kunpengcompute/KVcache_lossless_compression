@@ -135,13 +135,19 @@ file build/libkvfold_huffman_bf16.so
 ```text
 ELF 64-bit LSB shared object
 ```
+### 拉取测试数据
+
+前提要求：已安装Git LFS
+```text
+git lfs version
+git lfs install
+git lfs pull
+```
 
 ### 其他编译目标
 
 ```bash
 make          # 编译 C 正确性与性能测试
-make asan     # 编译 AddressSanitizer 调试版本
-make wall     # 开启额外编译告警
 make clean    # 清理编译产物
 ```
 
@@ -155,7 +161,7 @@ source ~/.venvs/huffman-bf16/bin/activate
 
 python -m pip install --upgrade pip
 python -m pip install numpy zstandard
-python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+python -m pip install torch --index-url https://download.pytorch.org/whl/cpu --trusted-host download.pytorch.org --trusted-host download-r2.pytorch.org
 ```
 
 ## 快速入门
