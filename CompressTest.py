@@ -362,8 +362,8 @@ def print_results(results: List[Dict[str, Any]]) -> None:
         f"{'Ratio':>10}"
         f"{'Enc(ms)':>12}"
         f"{'Dec(ms)':>12}"
-        f"{'Enc GB/s':>12}"
-        f"{'Dec GB/s':>12}"
+        f"{'Enc(GB/s)':>12}"
+        f"{'Dec(GB/s)':>12}"
     )
 
     print()
