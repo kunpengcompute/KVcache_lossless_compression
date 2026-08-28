@@ -1,23 +1,25 @@
 # KV Cache Lossless Compression
 
+简体中文 | [English](./README_EN.md)
+
 ## 项目介绍
 
-KV Cache Lossless Compression 是面向大语言模型 BF16 KV Cache 数据的无损压缩项目。项目当前提供 Huffman-BF16 压缩算法、Linux 动态库接口、Python 调用封装以及与 Pure-ZSTD 的对比测试。
+KV Cache Lossless Compression是面向大语言模型BF16 KV Cache数据的无损压缩项目。项目当前提供Huffman-BF16压缩算法、Linux动态库接口、Python调用封装以及与 Pure-ZSTD的对比测试。
 
-本项目用于指导用户编译、部署、验证和使用 Huffman-BF16 压缩算法，并通过测试脚本统计压缩大小、压缩比、压缩与解压耗时以及处理带宽。
+本项目用于指导用户编译、部署、验证和使用Huffman-BF16压缩算法，并通过测试脚本统计压缩大小、压缩比、压缩与解压耗时以及处理带宽。
 
 ## 简要介绍
 
-随着大语言模型上下文长度和并发请求数量增加，KV Cache 占用的内存空间和数据传输带宽不断增长。如何在不损失模型数据精度的前提下降低 KV Cache 的存储和传输开销，是大模型推理系统中的重要问题。
+随着大语言模型上下文长度和并发请求数量增加，KV Cache占用的内存空间和数据传输带宽不断增长。如何在不损失模型数据精度的前提下降低KV Cache的存储和传输开销，是大模型推理系统中的重要问题。
 
-本项目针对 BF16 格式的 KV Cache 数据实现无损 Huffman 压缩。每个 BF16 数值由 16 位组成，算法将其拆分为：
+本项目针对BF16格式的KV Cache数据实现无损Huffman压缩。每个BF16数值由16位组成，算法将其拆分为：
 
-- `E8`：高 8 位，包含符号位和指数相关信息。
-- `S1M7`：低 8 位，包含尾数相关信息。
+- `E8`：高8位，包含符号位和指数相关信息。
+- `S1M7`：低8位，包含尾数相关信息。
 
-其中，`E8` 部分采用 Huffman 熵编码，并使用 8 路交错数据流进行处理；`S1M7` 部分按原始精度保存。解压时重新组合两个部分，恢复完整的 BF16 位模式，因此解压结果与原始数据逐位一致。
+其中，`E8`部分采用Huffman熵编码，并使用8路交错数据流进行处理；`S1M7`部分按原始精度保存。解压时重新组合两个部分，恢复完整的BF16位模式，因此解压结果与原始数据逐位一致。
 
-项目同时提供 Pure-ZSTD 基线测试，用于对比以下指标：
+项目同时提供Pure-ZSTD基线测试，用于对比以下指标：
 
 - 压缩后大小
 - 压缩比
@@ -28,74 +30,74 @@ KV Cache Lossless Compression 是面向大语言模型 BF16 KV Cache 数据的�
 ## 目录结构
 
 ```text
-├── compress_lib                           # Huffman、FSE 等底层压缩源码
-│   ├── huf_compress.cc                    # Huffman 压缩实现
-│   ├── huf_decompress.cc                  # Huffman 解压实现
-│   ├── hist.cc                            # BF16 数据直方图统计
-│   ├── entropy_common.cc                  # Huffman/FSE 公共逻辑
-│   ├── fse_compress.cc                    # FSE 压缩实现
-│   ├── fse_decompress.cc                  # FSE 解压实现
+├── compress_lib                           # Huffman、FSE等底层压缩源码
+│   ├── huf_compress.cc                    # Huffman压缩实现
+│   ├── huf_decompress.cc                  # Huffman解压实现
+│   ├── hist.cc                            # BF16数据直方图统计
+│   ├── entropy_common.cc                  # Huffman/FSE公共逻辑
+│   ├── fse_compress.cc                    # FSE压缩实现
+│   ├── fse_decompress.cc                  # FSE解压实现
 │   └── *.h                                # 底层算法头文件
 ├── scripts                                # 辅助和验证脚本
-│   ├── export_bf16_raw.py                 # 将 PyTorch BF16 数据导出为原始数据
-│   └── test_so_smoke.py                   # Linux .so 无损往返测试
-├── src                                    # Huffman-BF16 接口与 C 测试代码
-│   ├── kvfold_huffman_bf16.c              # Huffman-BF16 C 接口实现
+│   ├── export_bf16_raw.py                 # 将PyTorchBF16数据导出为原始数据
+│   └── test_so_smoke.py                   # Linux .so无损往返测试
+├── src                                    # Huffman-BF16接口与C测试代码
+│   ├── kvfold_huffman_bf16.c              # Huffman-BF16 C接口实现
 │   ├── kvfold_huffman_bf16.h              # 对外公开头文件
-│   ├── test_kvfold_huffman_bf16.c         # C 正确性与性能测试
-│   └── kvfold_test_common.h               # C 测试公共函数
-├── CompressTest.py                        # Pure-ZSTD 与 Huffman-BF16 对比测试
-├── kvfold_huffman_bf16.py                 # Python ctypes 调用封装
-├── Makefile                               # Linux 编译入口
-├── qwen3_8b_bf16_prompt3_token256.pt      # BF16 测试数据
+│   ├── test_kvfold_huffman_bf16.c         # C正确性与性能测试
+│   └── kvfold_test_common.h               # C测试公共函数
+├── CompressTest.py                        # Pure-ZSTD与Huffman-BF16对比测试
+├── kvfold_huffman_bf16.py                 # Python ctypes调用封装
+├── Makefile                               # Linux编译入口
+├── qwen3_8b_bf16_prompt3_token256.pt      # BF16测试数据
 ├── qwen3_8b_bf16_prompt3_token256_contiguous.pt
-│                                            # 连续内存布局的 BF16 测试数据
-├── .gitignore                             # Git 忽略规则
+│                                            # 连续内存布局的BF16测试数据
+├── .gitignore                             # Git忽略规则
 ├── LICENSE                                # Apache License 2.0
 └── README.md                              # 项目介绍和使用文档
 ```
 
-编译后会在 `build/` 目录生成测试程序和动态库。`build/` 属于构建产物目录，不需要提交到代码仓。
+编译后会在 `build/`目录生成测试程序和动态库。`build/`属于构建产物目录，不需要提交到代码仓。
 
 ## 版本说明
 
 当前版本为初始开发版本，主要包含以下能力：
 
-- BF16 KV Cache 无损 Huffman 压缩与解压
-- C 语言压缩接口
-- Linux `.so` 动态库
-- Python ctypes 调用接口
-- Pure-ZSTD 与 Huffman-BF16 对比测试
+- BF16 KV Cache无损Huffman压缩与解压
+- C语言压缩接口
+- Linux`.so`动态库
+- Python ctypes调用接口
+- Pure-ZSTD与Huffman-BF16对比测试
 - 压缩与解压正确性校验
 - 压缩比、耗时和带宽统计
-- AddressSanitizer 和编译告警检查目标
+- AddressSanitizer和编译告警检查目标
 
-正式发布时建议使用明确的版本号，例如 `v1.0.0`，并补充对应版本的变更记录。
+正式发布时建议使用明确的版本号，例如`v1.0.0`，并补充对应版本的变更记录。
 
 ## 兼容性信息
 
 当前项目存在以下约束：
 
-- 当前主要支持 Linux x86-64 运行环境。
-- 编译需要 GNU Make 和支持 C++11 的 g++ 编译器。
-- 默认编译参数包含 `-march=native`，建议在最终运行算法的目标服务器上编译。
-- Python 测试需要 Python 3、PyTorch、NumPy 和 zstandard。
-- `CompressTest.py` 的输入张量必须为 `torch.bfloat16`。
-- C 接口使用 `uint16_t` 保存 BF16 原始位模式。
-- 测试脚本支持 `[layer, 2, seq, head, dim]` 和 `[2, layer, seq, head, dim]` 两种 5 维布局。
-- 对于 `[2, layer, seq, hidden]` 四维输入，需要配置 `NUM_HEADS` 和 `HEAD_DIM`。
-- 单个 Huffman 原始数据块上限为 128 KiB，即 64K 个 BF16 元素；更大的输入由内部实现处理。
-- Linux 生成的 `.so` 文件不能直接由 Windows Python 加载。
+- 当前主要支持Linux x86-64运行环境。
+- 编译需要GNU Make和支持C++11的g++编译器。
+- 默认编译参数包含`-march=native`，建议在最终运行算法的目标服务器上编译。
+- Python测试需要Python 3、PyTorch、NumPy和zstandard。
+- `CompressTest.py`的输入张量必须为`torch.bfloat16`。
+- C 接口使用`uint16_t`保存BF16原始位模式。
+- 测试脚本支持`[layer, 2, seq, head, dim]`和`[2, layer, seq, head, dim]`两种5维布局。
+- 对于`[2, layer, seq, hidden]`四维输入，需要配置`NUM_HEADS`和`HEAD_DIM`。
+- 单个Huffman原始数据块上限为128KiB，即64K个BF16元素；更大的输入由内部实现处理。
+- Linux生成的`.so`文件不能直接由Windows Python加载。
 
 说明：
 
-Huffman-BF16 是无损位模式压缩。测试脚本会检查解压结果的形状、数据类型以及每一个 BF16 元素是否与原始数据完全一致。
+Huffman-BF16是无损位模式压缩。测试脚本会检查解压结果的形状、数据类型以及每一个BF16元素是否与原始数据完全一致。
 
 ## 环境部署
 
 ### 安装系统依赖
 
-Ubuntu 或 Debian 环境执行：
+Ubuntu或Debian环境执行：
 
 ```bash
 sudo apt-get update
@@ -135,9 +137,11 @@ file build/libkvfold_huffman_bf16.so
 ```text
 ELF 64-bit LSB shared object
 ```
+
 ### 拉取测试数据
 
 前提要求：已安装Git LFS
+
 ```text
 git lfs version
 git lfs install
@@ -147,11 +151,11 @@ git lfs pull
 ### 其他编译目标
 
 ```bash
-make          # 编译 C 正确性与性能测试
+make          # 编译C正确性与性能测试
 make clean    # 清理编译产物
 ```
 
-### 安装 Python 依赖
+### 安装Python依赖
 
 建议使用独立虚拟环境：
 
@@ -166,9 +170,9 @@ python -m pip install torch --index-url https://download.pytorch.org/whl/cpu --t
 
 ## 快速入门
 
-### 验证 `.so` 动态库
+### 验证`.so`动态库
 
-`scripts/test_so_smoke.py` 只依赖 Python 标准库，可以直接验证动态库导出的 C 接口：
+`scripts/test_so_smoke.py`只依赖Python标准库，可以直接验证动态库导出的C接口：
 
 ```bash
 python3 scripts/test_so_smoke.py
@@ -180,7 +184,7 @@ python3 scripts/test_so_smoke.py
 SO round-trip: OK
 ```
 
-该测试会生成确定性的 BF16 位模式，通过 `.so` 完成压缩和解压，并检查解压结果是否与原始数据逐字节一致。
+该测试会生成确定性的BF16位模式，通过`.so`完成压缩和解压，并检查解压结果是否与原始数据逐字节一致。
 
 ### 配置测试数据
 
@@ -191,7 +195,7 @@ qwen3_8b_bf16_prompt3_token256.pt
 qwen3_8b_bf16_prompt3_token256_contiguous.pt
 ```
 
-运行 `CompressTest.py` 前，需要在脚本配置区设置 `DATA_PATH`。例如：
+运行`CompressTest.py`前，需要在脚本配置区设置`DATA_PATH`。例如：
 
 ```python
 DATA_PATH = str(
@@ -199,13 +203,13 @@ DATA_PATH = str(
 )
 ```
 
-如果 `.pt` 文件中保存的是字典，需要通过 `TENSOR_KEY` 指定张量字段：
+如果`.pt`文件中保存的是字典，需要通过`TENSOR_KEY`指定张量字段：
 
 ```python
 TENSOR_KEY = "kv_cache"
 ```
 
-如果输入是 `[2, layer, seq, hidden]` 四维张量，还需要设置：
+如果输入是`[2, layer, seq, hidden]`四维张量，还需要设置：
 
 ```python
 NUM_HEADS = 8
@@ -229,7 +233,7 @@ python CompressTest.py
 | 指标 | 说明 |
 |---|---|
 | `Method` | 压缩算法名称 |
-| `Level` | ZSTD 压缩等级，Huffman-BF16 显示为 0 |
+| `Level` | ZSTD压缩等级，Huffman-BF16显示为0 |
 | `Orig(MB)` | 原始数据大小 |
 | `Comp(MB)` | 压缩后大小 |
 | `Ratio` | 压缩比 |
@@ -243,10 +247,10 @@ python CompressTest.py
 | 学习资源类别 | 学习资源名称 | 学习资源简介 |
 |---|---|---|
 | 文档 | README | 提供项目介绍、环境部署和快速入门说明 |
-| 头文件 | `src/kvfold_huffman_bf16.h` | 提供 C API 定义及参数说明 |
-| Python 封装 | `kvfold_huffman_bf16.py` | 提供 Python 压缩和解压接口 |
-| 示例 | `scripts/test_so_smoke.py` | 提供 `.so` 动态库正确性验证示例 |
-| 测试 | `CompressTest.py` | 提供 Pure-ZSTD 与 Huffman-BF16 对比测试 |
+| 头文件 | `src/kvfold_huffman_bf16.h` | 提供C API定义及参数说明 |
+| Python 封装 | `kvfold_huffman_bf16.py` | 提供Python压缩和解压接口 |
+| 示例 | `scripts/test_so_smoke.py` | 提供`.so`动态库正确性验证示例 |
+| 测试 | `CompressTest.py` | 提供Pure-ZSTD与Huffman-BF16对比测试 |
 
 ## 免责声明
 
@@ -272,4 +276,10 @@ python CompressTest.py
 
 ## 贡献声明
 
-欢迎大家为社区做贡献，如果使用过程中有任何问题/建议，或者需要反馈特性需求和bug报告，可以提交Issues联系我们，具体贡献方法可参考这里。同时也欢迎大家在讨论专区展开讨论交流。感谢您的支持。
+欢迎大家为社区做贡献，如果使用过程中有任何问题/建议，或者需要反馈特性需求和bug报告，可以提交issues联系我们，具体贡献方法可参考这里。同时也欢迎大家在讨论专区展开讨论交流。感谢您的支持。
+
+## 修订记录
+
+| 文档版本 | 发布日期  | 修改说明 |
+| ------- | -------|----------|
+| 01 | 2026-09-30 | 第一次正式发布。|
