@@ -1109,6 +1109,7 @@ HUF_compress_float_internal_bf16 (void* dst, size_t dstSize,
         CHECK_V_F(largest, HIST_count_BF16(table->count, &maxSymbolValue, src, count_total, mantissaBuf, count_total, &mantissaSize) );
         if (largest == 0) return 0;
         if (mantissaSize != count_total) return 0;                   // 尾数必须全部写入
+        if (largest == count_total) return 0;
     }
 
     // Build Huffman Tree -------------------------------------------------
