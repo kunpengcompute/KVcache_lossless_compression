@@ -377,7 +377,7 @@ HUF_decompress8X1_usingDTable_interleaved_stream(
     const HUF_DTable* DTable)
 {
     /* Check */
-    if (cHufSrcSize < 10) return ERROR(corruption_detected);  /* strict minimum : jump table + 1 byte per stream */
+    if (cHufSrcSize < 22) return ERROR(corruption_detected);  /* strict minimum : jump table + 1 byte per stream */
     {   
         const HUF_DEltX1* dtable = (const HUF_DEltX1*)(DTable + 1);
         U32 const table_sft = (64 - HUF_getDTableDesc(DTable).tableLog) & 0x3F;
@@ -479,7 +479,7 @@ HUF_decompress8X1_usingDTable_interleaved_stream_stride_2byte (
     const HUF_DTable* DTable)
 {
     /* Check */
-    if (cHufSrcSize < 10) return ERROR(corruption_detected);  /* strict minimum : jump table + 1 byte per stream */
+    if (cHufSrcSize < 22) return ERROR(corruption_detected);  /* strict minimum : jump table + 1 byte per stream */
     {
         const HUF_DEltX1* dtable = (const HUF_DEltX1*)(DTable + 1);
         U32 const table_sft = (64 - HUF_getDTableDesc(DTable).tableLog) & 0x3F;
