@@ -1,5 +1,5 @@
 CXX      := g++
-CXXFLAGS := -std=c++11 -O3 -march=native -I src -I compress_lib
+CXXFLAGS := -std=c++11 -D_FORTIFY_SOURCE=2 -O3  -Wl,-z,relro,-z,now  -ftrapv -s  -fstack-protector-strong -march=native -I src -I compress_lib
 
 SRC := src/test_kvfold_huffman_bf16.c src/kvfold_huffman_bf16.c \
        compress_lib/huf_compress.cc compress_lib/huf_decompress.cc \
