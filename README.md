@@ -78,7 +78,6 @@ KV Cache Lossless Compression是面向大语言模型BF16 KV Cache数据的无�
 
 当前项目存在以下约束：
 
-- 当前主要支持Linux x86-64运行环境。
 - 编译需要GNU Make和支持C++11的g++编译器。
 - 默认编译参数包含`-march=native`，建议在最终运行算法的目标服务器上编译。
 - Python测试需要Python 3、PyTorch、NumPy和zstandard。
