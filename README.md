@@ -4,7 +4,7 @@
 
 ## 项目介绍
 
-KV Cache Lossless Compression是面向大语言模型BF16 KV Cache数据的无损压缩项目。项目当前提供Huffman-BF16压缩算法、Linux动态库接口、Python调用封装以及与 Pure-ZSTD的对比测试。
+KV Cache Lossless Compression是面向大语言模型BF16 KV Cache数据的无损压缩项目。项目当前提供Huffman-BF16压缩算法、Linux动态库接口、Python调用封装以及与Pure-ZSTD的对比测试。
 
 本项目用于指导用户编译、部署、验证和使用Huffman-BF16压缩算法，并通过测试脚本统计压缩大小、压缩比、压缩与解压耗时以及处理带宽。
 
@@ -57,7 +57,7 @@ KV Cache Lossless Compression是面向大语言模型BF16 KV Cache数据的无�
 └── README.md                              # 项目介绍和使用文档
 ```
 
-编译后会在 `build/`目录生成测试程序和动态库。`build/`属于构建产物目录，不需要提交到代码仓。
+编译后会在`build/`目录生成测试程序和动态库。`build/`属于构建产物目录，不需要提交到代码仓。
 
 ## 版本说明
 
@@ -85,7 +85,7 @@ KV Cache Lossless Compression是面向大语言模型BF16 KV Cache数据的无�
 - C 接口使用`uint16_t`保存BF16原始位模式。
 - 测试脚本支持`[layer, 2, seq, head, dim]`和`[2, layer, seq, head, dim]`两种5维布局。
 - 对于`[2, layer, seq, hidden]`四维输入，需要配置`NUM_HEADS`和`HEAD_DIM`。
-- 单个Huffman原始数据块上限为128KiB，即64K个BF16元素；更大的输入由内部实现处理。
+- 单个Huffman原始数据块上限为128KiB，即64Ki个BF16元素；更大的输入由内部实现处理。
 - Linux生成的`.so`文件不能直接由Windows Python加载。
 
 说明：
@@ -121,7 +121,7 @@ make so
 
 编译完成后生成：
 
-```text
+```output
 build/libkvfold_huffman_bf16.so
 ```
 
@@ -133,15 +133,15 @@ file build/libkvfold_huffman_bf16.so
 
 预期输出包含：
 
-```text
+```output
 ELF 64-bit LSB shared object
 ```
 
 ### 拉取测试数据
 
-前提要求：已安装Git LFS
+前提要求：已安装Git LFS。
 
-```text
+```bash
 git lfs version
 git lfs install
 git lfs pull
@@ -179,7 +179,7 @@ python3 scripts/test_so_smoke.py
 
 验证成功时输出包含：
 
-```text
+```output
 SO round-trip: OK
 ```
 
@@ -250,7 +250,6 @@ python CompressTest.py
 | Huffman-BF16 | 0     | 36.00    | 24.37    | 1.4772 | 48.104  | 74.349  | 0.785      | 0.508      |
 
 
-
 ## 学习文档
 
 | 学习资源类别 | 学习资源名称 | 学习资源简介 |
@@ -273,7 +272,7 @@ python CompressTest.py
 
 - **用户输入安全性：**用户需自行保证输入的命令行的安全性，并承担因输入不当而导致的任何安全风险或损失。对于输入命令行不当所导致的问题，本工具及其开发者概不负责。
 
-- **免责声明范围：**本免责声明适用于所有使用本工具的个人或实体。使用本工具即表示您同意并接受本声明的内容，并愿意承担因使用该功能而产生的风险和责任，如有异议请停止使用本工具。
+- **免责声明范围：**本免责声明适用于所有使用本工具的个人或实体。使用本工具即表示你同意并接受本声明的内容，并愿意承担因使用该功能而产生的风险和责任，如有异议请停止使用本工具。
 
 在使用本工具之前，请谨慎阅读并理解以上免责声明的内容。对于使用本工具所产生的任何问题或疑问，请及时联系开发者。
 
@@ -281,7 +280,7 @@ python CompressTest.py
 
 如果您不希望您的模型或数据集等信息在本项目中被提及，或希望更新本项目有关的描述，请在GitCode提交issue，我们将根据您的issue要求删除或更新您相关描述。衷心感谢您对本项目的理解和贡献。
 
-## Licesen
+## License
 
 ## 贡献声明
 
@@ -290,5 +289,5 @@ python CompressTest.py
 ## 修订记录
 
 | 文档版本 | 发布日期  | 修改说明 |
-| ------- | -------|----------|
-| 01 | 2026-09-30 | 第一次正式发布。|
+| ------- | ------- | ------- |
+| 01 | 2026-09-30 | 第一次正式发布。 |
